@@ -1,12 +1,42 @@
 package main
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"fmt"
+	"log"
+	"os"
+
+	"gorm.io/gorm"
+
+	"github.com/joho/godotenv"
+	"gorm.io/driver/mysql"
+)
+
+var db *gorm.DB
+
+func initDatabase() {
+	// Load of env
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbName := os.Getenv("DB_NAME")
+
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		dbUser, dbPassword, dbHost, dbPort, dbName)
+
+	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatal("Failed to connect to MySQL:", err)
+	}
+	fmt.Println("Connected to MySQL succesfully")
+
+}
 
 func main() {
-	app := fiber.New()
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, Cocuto!")
-	})
-
-	app.Listen(":8080")
+	initDatabase()
 }
